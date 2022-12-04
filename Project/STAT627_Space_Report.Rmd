@@ -1,5 +1,5 @@
 ---
-title: "STAT-627 Space Report"
+title: "STAT-627 Space: KNN 2"
 author: "Max Calzada, Josiah Gottfried, Sanghyeob Ko, Domingo Salerno"
 date: '2022-12-03'
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(tidyverse, readxl, XML, jsonlite, tidymodels, infer, reshape2, pwr, janitor, lubridate, skimr, car, vip, caret, MASS, ISLR, glmnet, randomForest, gbm, rpart, boot, broom, gridExtra, ROCR, reshape2, pls, nnet, deepnet, klaR, data.table, tm, SnowballC, wordcloud, leaps, tree, bootstrap, leaps, tree)
+pacman::p_load(tidyverse, readxl, XML, jsonlite, tidymodels, infer, reshape2, pwr, janitor, lubridate, skimr, car, vip, caret, MASS, ISLR, glmnet, randomForest, gbm, rpart, boot, broom, gridExtra, ROCR, reshape2, pls, nnet, deepnet, klaR, data.table, tm, SnowballC, wordcloud, leaps, tree, bootstrap, leaps, tree, class)
 ```
 
 # Introduction
@@ -29,17 +29,18 @@ described by 17 feature columns and 1 class column which identifies it to be eit
 
 <https://www.kaggle.com/datasets/fedesoriano/stellar-classification-dataset-sdss17>
 
-# Models
-
-## KNN
+# Load data
 
 ```{r}
-setwd("~/Desktop/STAT-627/STAT627_Space_Project")
-
-Space_DF <- read.csv("star_classification.csv")
+Space_DF <- read.csv("star_classification.csv") # Upload data
 Space_DF <- Space_DF[, c("class", "u", "r", "g", "i", "z", "redshift")]
-Space_DF$class_f <- as.factor(Space_DF$class) # Class or Factor? Why?
+
+Space_DF <- subset(Space_DF, u != -9999) # Remove point with NAs
+Space_DF$class <- as.factor(Space_DF$class) # Convert class to a factor
+
 ```
+
+# Split data into training and testing sets
 
 ```{r}
 set.seed(1)
@@ -56,6 +57,28 @@ X.S.Test <- S.Test[, c("u", "r", "g", "i", "z", "redshift")]
 Y.S.Train <- Space_DF$class_f[Z.S]
 Y.S.Test <- Space_DF$class_f[-Z.S]
 ```
+
+# Calculate principal components
+
+```{r}
+X.pca <-  model.matrix(class ~ u + r + g + i + z + redshift, data = Space_DF)[,-1]
+pc <-  prcomp(X.pca, scale = TRUE)
+summary(pc)
+screeplot(pc)
+pc_df <- data.frame(Space_DF$class, pc$x)
+pc_df <- rename(pc_df, 'class' = 'Space_DF.class')
+pc_df
+
+# Training set / Testing set of PC data
+n.PC <- length(pc_df$class)
+n.PC
+S.Train.PC <- pc_df[Z.S,]
+S.Test.PC <- pc_df[-Z.S,]
+```
+
+# Models
+
+## KNN
 
 ```{r}
 knn.S = knn(X.S.Train, X.S.Test, Y.S.Train, 3) # K = 3?
@@ -191,23 +214,6 @@ mean(pred_rate) # 94.56% for K-fold 10 validation of QDA
 
 3. LDA & QDA with PC (PC1, PC2)
 
-```{r}
-X.pca <-  model.matrix(class ~ u + r + g + i + z + redshift, data = Space_DF)[,-1]
-pc <-  prcomp(X.pca, scale = TRUE)
-summary(pc)
-screeplot(pc)
-pc_df <- data.frame(Space_DF$class, pc$x)
-pc_df <- rename(pc_df, 'class' = 'Space_DF.class')
-pc_df
-
-# Training set / Testing set of PC data
-n <- length(pc_df$class)
-n
-z <- sample(n, n*0.9)
-S.Train.PC <- pc_df[z,]
-S.Test.PC <- pc_df[-z,]
-```
-
 3-1. LDA with PC
 ```{r}
 LDA.PC <- lda(class ~ PC1 + PC2, data = pc_df)
@@ -292,7 +298,12 @@ mean(pred_rate) # 76.82%. It is quite lower than original 94.56%
 
 
 
+## Logistic regression
 
+```{r}
+
+
+```
 
 
 ## Trees/Random Forests
