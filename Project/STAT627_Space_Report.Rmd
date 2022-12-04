@@ -1,5 +1,5 @@
 ---
-title: "STAT-627 Space: KNN 2"
+title: "STAT-627 Space Report"
 author: "Max Calzada, Josiah Gottfried, Sanghyeob Ko, Domingo Salerno"
 date: '2022-12-03'
 output: html_document
