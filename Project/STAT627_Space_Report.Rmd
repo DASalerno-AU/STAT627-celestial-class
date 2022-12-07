@@ -222,86 +222,85 @@ mean(pred_rate) # 94.56% for K-fold 10 validation of QDA
 ```
 
 
-3. LDA & QDA with PC (PC1, PC2)
+4. LDA & QDA with PC (PC1, PC2)
 
-3-1. LDA with PC
+4-1. LDA with PC
 ```{r}
-LDA.PC <- lda(class ~ PC1 + PC2, data = pc_df)
+LDA.PC <- lda(class ~ PC1 + PC2 + PC3, data = pc_df)
 LDA.PC 
-# LD1 captures 98.81% of differences between the groups, LD2 adds 1.19% to that. The result is much better than before. Originally, LD1 captured 87.93% of differences between the groups, LD2 adds 12.07% to that.
+# LD1 captures 91.08% of differences between the groups, LD2 adds 8.92% to that. The result is better than before. Originally, LD1 captured 87.93% of differences between the groups, LD2 adds 12.07% to that.
 ```
 
-3-2. LDA with PC Cross-validation (CV: LOOCV)
+
+4-2. LDA with PC Cross-validation (CV: LOOCV)
 ```{r}
-LDA.fit.PC <- lda(class ~ PC1 + PC2, CV = TRUE, data = pc_df)
+LDA.fit.PC <- lda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, LDA.fit.PC$class) 
-mean(pc_df$class == LDA.fit.PC$class) # 74.01%. It is quite lower than original  84.62%, correct classification rate.
+mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is a little bit lower than original  84.62%, correct classification rate.
 ```
 
-3-3. LDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
+4-3. LDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
-LDA.training.PC <- lda(class ~ PC1 + PC2, data = S.Train.PC)
+LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
-
 table(S.Test.PC$class, LDA.pred.PC$class)
-mean(S.Test.PC$class == LDA.pred.PC$class) # 73.37%. It is quite lower than original 84.67%, correct classification rate.
+mean(S.Test.PC$class == LDA.pred.PC$class) # 82.17%. It is a little bit lower than original 84.67%, correct classification rate.
 ```
 
 
-3-4. LDA with PC Cross-validation (CV: k-fold 10)
+4-4. LDA with PC Cross-validation (CV: k-fold 10)
+
 ```{r}
 pred_rate <- NULL
-
 for(i in 1:10){
   train_kf <- pc_df[fold != i,]
   test_kf <- pc_df[fold == i,]
-  lda_kf <- lda(class ~ PC1 + PC2, data = train_kf )
+  lda_kf <- lda(class ~ PC1 + PC2 + PC3, data = train_kf )
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-
-mean(pred_rate) # 74.01%, It is lower than original 84.63% for K-fold 10 validation of LDA
+mean(pred_rate) # 82.72%, It is a little bit lower than original 84.63% for K-fold 10 validation of LDA
 ```
 
 
-3-5. QDA with PC
+
+4-5. QDA with PC
 ```{r}
-QDA.PC <- qda(class ~ PC1 + PC2, data = pc_df) 
+QDA.PC <- qda(class ~ PC1 + PC2 + PC3, data = pc_df) 
 QDA.PC
 ```
 
 
-3-6. QDA with PC Cross-validation (CV: LOOCV)
+4-6. QDA with PC Cross-validation (CV: LOOCV)
 ```{r}
-QDA.fit.PC <- qda(class ~ PC1 + PC2, CV = TRUE, data = pc_df)
+QDA.fit.PC <- qda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, QDA.fit.PC$class)
-mean(pc_df$class == QDA.fit.PC$class) # 76.83%. It is quite lower than original 94.55%
+mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the original 94.55%
 ```
 
 
-3-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
+4-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
-QDA.training.PC <- qda(class ~ PC1 + PC2, data = S.Train.PC)
+QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
-
 table(S.Test.PC$class, QDA.pred.PC$class)
-mean(S.Test.PC$class == QDA.pred.PC$class) # 76.52%, it is quite lower than original 94.54%.
+mean(S.Test.PC$class == QDA.pred.PC$class) # 94.49%, it is almost the same as the original 94.54%.
 ```
 
 
 
-3-8. QDA with PC Cross-validation (CV: k-fold 10)
+4-8. QDA with PC Cross-validation (CV: k-fold 10)
+
 ```{r}
 pred_rate <- NULL
-
 for(i in 1:10){
   train_kf <- pc_df[fold != i,]
   test_kf <- pc_df[fold == i,]
-  qda_kf <- qda(class ~ PC1 + PC2, data = train_kf )
+  qda_kf <- qda(class ~ PC1 + PC2 + PC3, data = train_kf )
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-mean(pred_rate) # 76.82%. It is quite lower than original 94.56%
+mean(pred_rate) # 94.55%. It is almost the same as the original 94.56%
 ```
 
 
