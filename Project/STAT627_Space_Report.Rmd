@@ -222,9 +222,9 @@ mean(pred_rate) # 94.56% for K-fold 10 validation of QDA
 ```
 
 
-4. LDA & QDA with PC (PC1, PC2)
+3. LDA & QDA with PC (PC1, PC2, PC3)
 
-4-1. LDA with PC
+3-1. LDA with PC
 ```{r}
 LDA.PC <- lda(class ~ PC1 + PC2 + PC3, data = pc_df)
 LDA.PC 
@@ -232,14 +232,14 @@ LDA.PC
 ```
 
 
-4-2. LDA with PC Cross-validation (CV: LOOCV)
+3-2. LDA with PC Cross-validation (CV: LOOCV)
 ```{r}
 LDA.fit.PC <- lda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, LDA.fit.PC$class) 
 mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is a little bit lower than original  84.62%, correct classification rate.
 ```
 
-4-3. LDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
+3-3. LDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
 LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
@@ -248,7 +248,7 @@ mean(S.Test.PC$class == LDA.pred.PC$class) # 82.17%. It is a little bit lower th
 ```
 
 
-4-4. LDA with PC Cross-validation (CV: k-fold 10)
+3-4. LDA with PC Cross-validation (CV: k-fold 10)
 
 ```{r}
 pred_rate <- NULL
@@ -264,14 +264,14 @@ mean(pred_rate) # 82.72%, It is a little bit lower than original 84.63% for K-fo
 
 
 
-4-5. QDA with PC
+3-5. QDA with PC
 ```{r}
 QDA.PC <- qda(class ~ PC1 + PC2 + PC3, data = pc_df) 
 QDA.PC
 ```
 
 
-4-6. QDA with PC Cross-validation (CV: LOOCV)
+3-6. QDA with PC Cross-validation (CV: LOOCV)
 ```{r}
 QDA.fit.PC <- qda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, QDA.fit.PC$class)
@@ -279,7 +279,7 @@ mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the ori
 ```
 
 
-4-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
+3-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
 QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
@@ -289,7 +289,7 @@ mean(S.Test.PC$class == QDA.pred.PC$class) # 94.49%, it is almost the same as th
 
 
 
-4-8. QDA with PC Cross-validation (CV: k-fold 10)
+3-8. QDA with PC Cross-validation (CV: k-fold 10)
 
 ```{r}
 pred_rate <- NULL
