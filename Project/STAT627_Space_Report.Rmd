@@ -193,98 +193,86 @@ plot(class.rate)
 1-1. Linear Discriminant Analysis (LDA)
 ```{r}
 # library(MASS)
-LDA <- lda(class ~ u + g + r + i + z + redshift, data = Space_DF) # The main command for LDA
+LDA <- lda(class ~ u + g + r + i + z + trans.redshift, data = Space_DF) # The main command for LDA
 LDA
 # Prior probabilities of groups: These are sample proportions of the 3 groups, from our data
 # Group means: Multivariate group means are computed within each group
-# Coefficients of linear discriminants: For our information only: these functions LD1-LD2
-# LD1, LD2 are different from our linear discriminant functions. 
-# These printed coefficients determine the Fisher's linear discriminants LD1, LD2. The first one is a linear function that achieves the maximal separation of our four groups. LD2 is a linear function, orthogonal to LD1, that achieves the maximal separation among all linear functions orthogonal to LD1, etc. These functions are linear combinations of our linear discriminant functions. Their derivation is based on Linear Algebra. Here, LD1 captures 87.93% of differences between the groups, LD2 adds 12.07% to that.
+# Coefficients of linear discriminants: These printed coefficients determine the Fisher's linear discriminants LD1, LD2. The first one is a linear function that achieves the maximal separation of our four groups. LD2 is a linear function, orthogonal to LD1, that achieves the maximal separation among all linear functions orthogonal to LD1, etc. These functions are linear combinations of our linear discriminant functions. Their derivation is based on Linear Algebra.
+# Here, LD1 captures 87.93% of differences between the groups, LD2 adds 12.07% to that.
 ```
 
 1-2. LDA Cross-validation (CV: LOOCV)
 ```{r}
 # Cross-validation
 # Option CV=TRUE is used for “leave one out” cross-validation; for each sampling unit, it gives its class assignment without the current observation. This is a method of estimating the testing classifications rate instead of the training rate.
-LDA.fit <- lda(class ~ u + g + r + i + z + redshift, CV = TRUE, data = Space_DF)
+LDA.fit <- lda(class ~ u + g + r + i + z + trans.redshift, CV = TRUE, data = Space_DF)
 table(Space_DF$class, LDA.fit$class) # The main diagonal shows correctly classified counts.
-mean(Space_DF$class == LDA.fit$class) # 84.62%: Correct classification rate = proportion of correctly classified counts.
+mean(Space_DF$class == LDA.fit$class) # 94.54%: Correct classification rate = proportion of correctly classified counts.
 ```
 
 1-3. LDA Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
-LDA.training <- lda(class ~ u + g + r + i + z + redshift, data = S.Train) # Only used the training set
+LDA.training <- lda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 LDA.pred <- predict(LDA.training, newdata = S.Test) # Prediction by using the testing set
-
 table(S.Test$class, LDA.pred$class) # The main diagonal shows correctly classified counts.
-mean(S.Test$class == LDA.pred$class) # 84.67%: Correct classification rate = proportion of correctly classified counts.
+mean(S.Test$class == LDA.pred$class) # 94.35%: Correct classification rate = proportion of correctly classified counts.
 ```
 
-
 1-4. LDA Cross-validation (CV: k-fold 10)
-
 ```{r}
 pred_rate <- NULL
-
 for(i in 1:10){
   train_kf <- Space_DF[fold != i,]
   test_kf <- Space_DF[fold == i,]
-  lda_kf <- lda(class ~ u + g + r + i + z + redshift, data = train_kf )
+  lda_kf <- lda(class ~ u + g + r + i + z + trans.redshift, data = train_kf )
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-
-mean(pred_rate) # 84.63% for K-fold 10 validation of LDA
+mean(pred_rate) # 94.53% for K-fold 10 validation of LDA
 ```
 
 
 2. Data Analysis 2 QDA
 2-1. Quadratic Discriminant Analysis (QDA)
 ```{r}
-QDA <- qda(class ~ u + g + r + i + z + redshift, data = Space_DF) # The main command for QDA
+QDA <- qda(class ~ u + g + r + i + z + trans.redshift, data = Space_DF) # The main command for QDA
 QDA
+# Difference between LDA and QDA: As for the assumption of QDA, the observation of each class is drawn from a normal distribution, and it is the same as LDA. But the assumption that each class has its own covariance matrix is different from LDA.
 ```
-
 
 2-2. QDA Cross-validation (CV: LOOCV)
 ```{r}
 # Quadratic Discriminant Analysis
-QDA.fit <- qda(class ~ u + g + r + i + z + redshift, CV = TRUE, data = Space_DF)
+QDA.fit <- qda(class ~ u + g + r + i + z + trans.redshift, CV = TRUE, data = Space_DF)
 table(Space_DF$class, QDA.fit$class) # The main diagonal shows correctly classified counts.
-mean(Space_DF$class == QDA.fit$class) # NA
-(55860+17277+21410)/(55860+3104+478+1677+17277+2+63+120+21410) # 94.55%: Correct classification rate = proportion of correctly classified counts.
+mean(Space_DF$class == QDA.fit$class)
+table(is.na(QDA.fit$class)) # There are 7 NAs in the result.
+(55788+17428+21555)/(55788+3146+509+1524+17428+4+29+9+21555) # 94.77%: Correct classification rate = proportion of correctly classified counts.
 ```
-
 
 2-3. QDA Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
-QDA.training <- qda(class ~ u + g + r + i + z + redshift, data = S.Train) # Only used the training set
+QDA.training <- qda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 QDA.pred <- predict(QDA.training, newdata = S.Test) # Prediction by using the testing set
-
 table(S.Test$class, QDA.pred$class) # The main diagonal shows correctly classified counts.
-mean(S.Test$class == QDA.pred$class) # 94.54%: Correct classification rate = proportion of correctly classified counts.
+mean(S.Test$class == QDA.pred$class) # 94.91%: Correct classification rate = proportion of correctly classified counts.
 ```
 
-
-
 2-4. QDA Cross-validation (CV: k-fold 10)
-
 ```{r}
 pred_rate <- NULL
-
 for(i in 1:10){
   train_kf <- Space_DF[fold != i,]
   test_kf <- Space_DF[fold == i,]
-  qda_kf <- qda(class ~ u + g + r + i + z + redshift, data = train_kf )
+  qda_kf <- qda(class ~ u + g + r + i + z + trans.redshift, data = train_kf )
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-mean(pred_rate) # 94.56% for K-fold 10 validation of QDA
+mean(pred_rate) # 94.77% for K-fold 10 validation of QDA
 ```
 
 
 3. LDA & QDA with PC (PC1, PC2, PC3)
-
 3-1. LDA with PC
 ```{r}
 LDA.PC <- lda(class ~ PC1 + PC2 + PC3, data = pc_df)
@@ -292,12 +280,11 @@ LDA.PC
 # LD1 captures 91.08% of differences between the groups, LD2 adds 8.92% to that. The result is better than before. Originally, LD1 captured 87.93% of differences between the groups, LD2 adds 12.07% to that.
 ```
 
-
 3-2. LDA with PC Cross-validation (CV: LOOCV)
 ```{r}
 LDA.fit.PC <- lda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, LDA.fit.PC$class) 
-mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is a little bit lower than original  84.62%, correct classification rate.
+mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is quite lower than original 94.54%, correct classification rate. It seems that the change of redshift may be the reason of the difference.
 ```
 
 3-3. LDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
@@ -305,12 +292,10 @@ mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is a little bit lower than or
 LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, LDA.pred.PC$class)
-mean(S.Test.PC$class == LDA.pred.PC$class) # 82.17%. It is a little bit lower than original 84.67%, correct classification rate.
+mean(S.Test.PC$class == LDA.pred.PC$class) # 82.82%. It is quite lower than original 94.35%, correct classification rate.
 ```
 
-
 3-4. LDA with PC Cross-validation (CV: k-fold 10)
-
 ```{r}
 pred_rate <- NULL
 for(i in 1:10){
@@ -320,10 +305,8 @@ for(i in 1:10){
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-mean(pred_rate) # 82.72%, It is a little bit lower than original 84.63% for K-fold 10 validation of LDA
+mean(pred_rate) # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
 ```
-
-
 
 3-5. QDA with PC
 ```{r}
@@ -331,27 +314,22 @@ QDA.PC <- qda(class ~ PC1 + PC2 + PC3, data = pc_df)
 QDA.PC
 ```
 
-
 3-6. QDA with PC Cross-validation (CV: LOOCV)
 ```{r}
 QDA.fit.PC <- qda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, QDA.fit.PC$class)
-mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the original 94.55%
+mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the original 94.77%
 ```
-
 
 3-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
 ```{r}
 QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, QDA.pred.PC$class)
-mean(S.Test.PC$class == QDA.pred.PC$class) # 94.49%, it is almost the same as the original 94.54%.
+mean(S.Test.PC$class == QDA.pred.PC$class) # 94.47%, it is almost the same as the original 94.91%.
 ```
 
-
-
 3-8. QDA with PC Cross-validation (CV: k-fold 10)
-
 ```{r}
 pred_rate <- NULL
 for(i in 1:10){
@@ -361,7 +339,7 @@ for(i in 1:10){
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-mean(pred_rate) # 94.55%. It is almost the same as the original 94.56%
+mean(pred_rate) # 94.55%. It is almost the same as the original 94.77%
 ```
 
 
