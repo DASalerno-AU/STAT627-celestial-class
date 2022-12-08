@@ -1,0 +1,19 @@
+Variable,Included,Description
+ obj_ID ,No,"Object Identifier, the unique value that identifies the object in the image catalog used by the CAS"
+ alpha ,No,Right Ascension angle (at J2000 epoch)
+ delta ,No,Declination angle (at J2000 epoch)
+ u ,Yes,Ultraviolet filter in the photometric system
+ g ,Yes,Green filter in the photometric system
+ r ,Yes,Red filter in the photometric system
+ i ,Yes,Near Infrared filter in the photometric system
+ z ,Yes,Infrared filter in the photometric system
+ run_ID ,No,Run Number used to identify the specific scan
+ rereun_ID ,No,Rerun Number to specify how the image was processed
+ cam_col ,No,Camera column to identify the scanline within the run
+ field_ID ,No,Field number to identify each field
+ spec_obj_ID ,No,Unique ID used for optical spectroscopic objects (this means that 2 different observations with the same spec_obj_ID must share the output class)
+ class ,No,"object class (galaxy, star or quasar object)"
+ redshift ,Yes,redshift value based on the increase in wavelength
+ plate ,No,"plate ID, identifies each plate in SDSS"
+ MJD ,No,"Modified Julian Date, used to indicate when a given piece of SDSS data was taken"
+ fiber_ID ,No,fiber ID that identifies the fiber that pointed the light at the focal plane in each observation
