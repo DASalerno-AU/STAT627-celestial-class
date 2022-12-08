@@ -1,7 +1,7 @@
 ---
-title: "STAT-627 Space: KNN 2"
+title: "STAT-627 Celestial Classification"
 author: "Max Calzada, Josiah Gottfried, Sanghyeob Ko, Domingo Salerno"
-date: '2022-12-03'
+date: '2022-12-09'
 output: html_document
 ---
 
@@ -22,10 +22,10 @@ Logistic Regression
 PCA
 Trees/Random Forests
 
-## Data
+## Data source
 
-The data consists of 100,000 observations of space taken by the SDSS (Sloan Digital Sky Survey). Every observation is 
-described by 17 feature columns and 1 class column which identifies it to be either a star, galaxy or quasar.
+The data consists of 100,000 observations of celestial objects by the SDSS (Sloan Digital Sky Survey). Every observation is described by 17 feature columns and 1 class column which identifies it to be either a star, galaxy or quasar.
+We dropped the columns irrelevant to the classification question, leaving us with six predictor variables. The variables "u", "r", "g", "i", and "z" measure the light reaching the telescope at different wavelengths. The "redshift" variable is the increase in wavelength due to the distance that the light travels.
 
 <https://www.kaggle.com/datasets/fedesoriano/stellar-classification-dataset-sdss17>
 
@@ -35,17 +35,77 @@ described by 17 feature columns and 1 class column which identifies it to be eit
 Space_DF <- read.csv("star_classification.csv") # Upload data
 Space_DF <- Space_DF[, c("class", "u", "r", "g", "i", "z", "redshift")]
 
+# Cleaning
 Space_DF <- subset(Space_DF, u != -9999) # Remove point with NAs
 Space_DF$class <- as.factor(Space_DF$class) # Convert class to a factor
 
-# Create indicator variables
-Space_DF$galaxy <- ifelse(Space_DF$class == "GALAXY", 1, 0)
-Space_DF$star <- ifelse(Space_DF$class == "STAR", 1, 0)
-Space_DF$quasar <- ifelse(Space_DF$class == "QSO", 1, 0)
+# Display
+head(Space_DF)
 
 ```
 
+```{r}
+# Create indicator variables for logistic regression
+Space_DF$galaxy <- ifelse(Space_DF$class == "GALAXY", 1, 0)
+Space_DF$star <- ifelse(Space_DF$class == "STAR", 1, 0)
+Space_DF$quasar <- ifelse(Space_DF$class == "QSO", 1, 0)
+```
+
+# Data exploration
+
+Here we visually explore the relationships between some of the predictors and the class variable.
+
+```{r}
+plot(redshift ~ g, data = Space_DF, col = class)
+legend("bottomright", legend = levels(Space_DF$class), col = 1:3, pch = 15)
+plot(u ~ z, data = Space_DF, col = class)
+legend("bottomright", legend = levels(Space_DF$class), col = 1:3, pch = 15)
+plot(r ~ i, data = Space_DF, col = class)
+legend("bottomright", legend = levels(Space_DF$class), col = 1:3, pch = 15)
+```
+
+The plots suggest that redshift is an important predictor of class. They show some potential multicollinearity, so we will also run a principle components analysis.\
+We also need to test normality assumptions for discriminant analysis.
+
+```{r}
+norm_plots <- function(variable){
+  
+  # Histogram with normal curve
+  hist(variable, freq = F, main = paste(deparse(substitute(variable))))
+  curve(dnorm(x, mean = mean(variable), sd = sd(variable)), add = TRUE, col = "blue")
+  
+  # Theoretical quantiles plot (with the first 5000 points to save computing power)
+  qqnorm(variable[1:5000], main = paste(deparse(substitute(variable))))
+  qqline(variable[1:5000])
+  
+}
+
+par(mfrow = c(1,2))
+norm_plots(Space_DF$u)
+norm_plots(Space_DF$r)
+norm_plots(Space_DF$g)
+norm_plots(Space_DF$i)
+norm_plots(Space_DF$z)
+norm_plots(Space_DF$redshift)
+```
+All variables look reasonably normal except redshift.
+
+```{r}
+# Since the data contain negative values, let's try signed square root
+signsqrt <- function(x){
+  sign(x) * abs(x)^(1/2)
+}
+
+# Transform redshift
+Space_DF$trans.redshift <- signsqrt(Space_DF$redshift)
+norm_plots(Space_DF$trans.redshift)
+```
+
+With the signed square root transformation, the data look much closer to normal.
+
 # Split data into training and testing sets
+
+To test our results, we will use both validation set and 10-fold cross-validation.
 
 ```{r}
 set.seed(1)
@@ -69,16 +129,16 @@ set.seed(1)
 fold <- sample(rep(1:10, 10000), n.S)
 ```
 
-
 # Calculate principal components
+
+We will try each of our models using the original data against models using the first three principal components. In addition to addressing multicollinearity issues, we hope that the principal components will allow us to cut the size of the data in half.
 
 ```{r}
 X.pca <-  model.matrix(class ~ u + r + g + i + z + redshift, data = Space_DF)[,-1]
 pc <-  prcomp(X.pca, scale = TRUE)
 summary(pc)
-screeplot(pc)
 pc_df <- cbind(pc$x, Space_DF[c("class", "galaxy", "star", "quasar")])
-pc_df
+head(pc_df)
 
 # Training set / Testing set of PC data
 n.PC <- length(pc_df$class)
@@ -86,6 +146,8 @@ n.PC
 S.Train.PC <- pc_df[Z.S,]
 S.Test.PC <- pc_df[-Z.S,]
 ```
+
+The first three principal components explain 98% of the variance.
 
 # Models
 
@@ -112,7 +174,6 @@ for (K in 1:20) {
 }
 
 class.rate
-# Is there an error here??????????????????????????????????????????????????????????????????????????
 ```
 
 ```{r}
