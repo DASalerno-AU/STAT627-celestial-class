@@ -8,7 +8,7 @@ Variable,Included,Description
  i ,Yes,Near Infrared filter in the photometric system
  z ,Yes,Infrared filter in the photometric system
  run_ID ,No,Run Number used to identify the specific scan
- rereun_ID ,No,Rerun Number to specify how the image was processed
+ rerun_ID ,No,Rerun Number to specify how the image was processed
  cam_col ,No,Camera column to identify the scanline within the run
  field_ID ,No,Field number to identify each field
  spec_obj_ID ,No,Unique ID used for optical spectroscopic objects (this means that 2 different observations with the same spec_obj_ID must share the output class)
