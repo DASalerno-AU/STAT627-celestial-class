@@ -654,7 +654,7 @@ rf.optimal <- randomForest(class ~ PC1 + PC2 + PC3,
                            mtry = which.min(rf.err), 
                            ntrees = ntrees[which.min(rf.err)]
                            )
-y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
+y_hat <- predict(rf.optimal, newdata = S.Test.PC, type = 'class')
 table(y_hat, Y.S.Test)
 CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
