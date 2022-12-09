@@ -510,6 +510,10 @@ CV.results["Tree", "ValSet"] <- mean(y_hat == Y.S.Test)
 table(y_hat, Y.S.Test)
 ```
 
+The single tree classifies celestial bodies based on two predictors: redshift and g, with the former being the dominant predictor in the tree. Redshift is the only predictor that is used to classify stars. Very low redshift values correspond to stars, and very high redshift values correspond to quasars (though this is done with varying degrees of confidence depending on the g value). The middle range of redshift values can be split to classify galaxies on the lower end, and on the higher end it classifies into either galaxies or quasars, with g differentiating between the two with a redshift greater than 0.673369. 
+
+The performance is quite good, with a prediction accuracy of 95.67%.
+
 ```{r K-fold pruned tree}
 # train model and plot
 tree <- tree(class ~ u + g + r + i + z + redshift, Space_DF)
@@ -524,6 +528,8 @@ tree.pruned.s <- summary(tree.pruned)
 CV.results["Tree", "KFold"] <- 1 - tree.pruned.s[[7]][1] / tree.pruned.s[[7]][2]
 ```
 
+Model performance improves when applying K-Fold cross validation, with a prediction accuracy of approximately 95.9%. The same predictors are used.
+
 ```{r VS pruned tree pca}
 # train model and plot
 tree <- tree(class ~ PC1 + PC2 + PC3, S.Train.PC)
@@ -535,6 +541,8 @@ plot(tree, type = 'uniform'); text(tree)
 CV.results["Tree.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 table(y_hat, Y.S.Test)
 ```
+
+The prediction accuracy declines sharply when introducing principle components to the single pruned tree, down to 84.93%.
 
 ```{r K-fold pruned tree pca}
 # train model and plot
@@ -549,6 +557,8 @@ plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 tree.pruned.s <- summary(tree.pruned)
 CV.results["Tree.PC", "KFold"] <- 1 - tree.pruned.s[[6]][1] / tree.pruned.s[[6]][2]
 ```
+
+Interestingly, while K-Fold cross-validation previously improved prediction accuracy, the opposite is true concerning principle components. Prediction accuracy declines to approximately 84.82%.
 
 ### Random Forests
 
@@ -579,6 +589,8 @@ table(y_hat, Y.S.Test)
 CV.results["RF", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
+The random forest method achieves the highest prediction accuracy of all tree-based models at 97.77%. 
+
 ```{r VS random forest PCA}
 # initialize error and tree number variables
 rf.err <- 0
@@ -605,6 +617,12 @@ y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
 table(y_hat, Y.S.Test)
 CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
+
+Remaining consistent with prior models, principal components in the random forest model decrease prediction accuracy to 95.68%.
+
+In summary, principal components reduce the prediction accuracy of the tree-based models. One of the reasons is likely that the trees eliminate the multicolinearity issue introduced by the highly correlated wavelength variables by including only one them in conjunction with the redshift variable. Thus, where elimination of multicolinearity is an advantage of principal components, this is redundant when considering decision trees.
+
+Furthermore, random forests are able to achieve a higher prediction accuracy by considering all wavelength variables. This is a significant advantage over a single tree, which only ever considers one wavelength. 
 
 # Results
 
