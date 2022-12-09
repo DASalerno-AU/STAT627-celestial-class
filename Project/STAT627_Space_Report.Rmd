@@ -104,7 +104,7 @@ Space_DF$trans.redshift <- signsqrt(Space_DF$redshift)
 norm_plots(Space_DF$trans.redshift)
 ```
 
-With the signed square root transformation, the data look much closer to normal.
+With the signed square root transformation, the data look closer to normal.
 
 # Split data into training and testing sets
 
@@ -120,8 +120,8 @@ Z.S <- sample(n.S, n.S*0.9) # We’ll split data at random
 S.Train <- Space_DF[Z.S,] # training data
 S.Test <- Space_DF[-Z.S,] # testing data
 
-X.S.Train <- S.Train[, c("u", "r", "g", "i", "z", "redshift")]
-X.S.Test <- S.Test[, c("u", "r", "g", "i", "z", "redshift")]
+X.S.Train <- S.Train[, c("u", "r", "g", "i", "z", "trans.redshift")]
+X.S.Test <- S.Test[, c("u", "r", "g", "i", "z", "trans.redshift")]
 Y.S.Train <- Space_DF$class[Z.S]
 Y.S.Test <- Space_DF$class[-Z.S]
 ```
@@ -134,10 +134,10 @@ fold <- sample(rep(1:10, 10000), n.S)
 
 ```{r}
 # Initialize matrix for cross validation results
-CV.results <- matrix(nrow = 6, ncol = 2)
-rownames(CV.results) <- c("KNN", "LDA", "QDA", "Logistic", "Tree", "RF")
+CV.results <- as.data.frame(matrix(nrow = 12, ncol = 2))
+rownames(CV.results) <- c("KNN", "LDA", "QDA", "Logistic", "Tree", "RF",
+                          "KNN.PC", "LDA.PC", "QDA.PC", "Logistic.PC", "Tree.PC", "RF.PC")
 colnames(CV.results) <- c("ValSet", "KFold")
-CV.results.PC <- CV.results
 ```
 
 # Calculate principal components
@@ -145,7 +145,7 @@ CV.results.PC <- CV.results
 We will try each of our models using the original data against models using the first three principal components. In addition to addressing multicollinearity issues, we hope that the principal components will allow us to cut the size of the data in half.
 
 ```{r}
-X.pca <-  model.matrix(class ~ u + r + g + i + z + redshift, data = Space_DF)[,-1]
+X.pca <-  model.matrix(class ~ u + r + g + i + z + trans.redshift, data = Space_DF)[,-1]
 pc <-  prcomp(X.pca, scale = TRUE)
 summary(pc)
 pc_df <- cbind(pc$x, Space_DF[c("class", "galaxy", "star", "quasar")])
@@ -153,18 +153,26 @@ head(pc_df)
 
 # Training set / Testing set of PC data
 n.PC <- length(pc_df$class)
-n.PC
 S.Train.PC <- pc_df[Z.S,]
 S.Test.PC <- pc_df[-Z.S,]
 ```
 
 The first three principal components explain 98% of the variance.
 
+```{r}
+norm_plots(pc_df$PC1)
+norm_plots(pc_df$PC2)
+norm_plots(pc_df$PC3)
+```
+
+The principal components appear to follow a normal distribution, satisfying the assumption for discriminant analysis.
+
 # Models
 
 ## KNN
 
 ```{r}
+set.seed(1)
 knn.S = knn(X.S.Train, X.S.Test, Y.S.Train, 3) # K = 3?
 table(Y.S.Test, knn.S)
 ```
@@ -174,12 +182,11 @@ mean(Y.S.Test == knn.S )
 ```
 
 ```{r}
-class.rate = rep(0,20) # Create a vector of length 20 and fill it with classification rates,
-# which number instead of 20?
-```
+# Tuning
+class.rate = rep(0,10)
 
-```{r}
-for (K in 1:20) {
+set.seed(1)
+for (K in 1:10) {
   knn.S = knn(X.S.Train, X.S.Test, Y.S.Train, K)
   class.rate[K] = mean(Y.S.Test == knn.S)
 }
@@ -189,13 +196,13 @@ class.rate
 
 ```{r}
 which.max(class.rate)
-CV.results[1,1] <- max(class.rate)
+CV.results["KNN", "ValSet"] <- max(class.rate)
 ```
 
 ```{r}
 # K20 <- as.vector(1:20)
 # plot(K,class.rate)
-plot(class.rate)
+plot(class.rate, type = "l", xlab = "K")
 ```
 
 
@@ -226,7 +233,8 @@ mean(Space_DF$class == LDA.fit$class) # 94.54%: Correct classification rate = pr
 LDA.training <- lda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 LDA.pred <- predict(LDA.training, newdata = S.Test) # Prediction by using the testing set
 table(S.Test$class, LDA.pred$class) # The main diagonal shows correctly classified counts.
-CV.results[2,1] <- mean(S.Test$class == LDA.pred$class) # 94.35%: Correct classification rate = proportion of correctly classified counts.
+CV.results["LDA", "ValSet"] <- mean(S.Test$class == LDA.pred$class) 
+CV.results["LDA", "ValSet"] # 94.35%: Correct classification rate = proportion of correctly classified counts.
 ```
 
 1-4. LDA Cross-validation (CV: k-fold 10)
@@ -239,7 +247,8 @@ for(i in 1:10){
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-CV.results[2,2] <- mean(pred_rate) # 94.53% for K-fold 10 validation of LDA
+CV.results["LDA", "KFold"] <- mean(pred_rate) 
+CV.results["LDA", "KFold"] # 94.53% for K-fold 10 validation of LDA
 ```
 
 
@@ -266,7 +275,8 @@ table(is.na(QDA.fit$class)) # There are 7 NAs in the result.
 QDA.training <- qda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 QDA.pred <- predict(QDA.training, newdata = S.Test) # Prediction by using the testing set
 table(S.Test$class, QDA.pred$class) # The main diagonal shows correctly classified counts.
-CV.results[3,1] <- mean(S.Test$class == QDA.pred$class) # 94.91%: Correct classification rate = proportion of correctly classified counts.
+CV.results["QDA", "ValSet"] <- mean(S.Test$class == QDA.pred$class) 
+CV.results["QDA", "ValSet"] # 94.91%: Correct classification rate = proportion of correctly classified counts.
 ```
 
 2-4. QDA Cross-validation (CV: k-fold 10)
@@ -279,7 +289,8 @@ for(i in 1:10){
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-CV.results[3,2] <- mean(pred_rate) # 94.77% for K-fold 10 validation of QDA
+CV.results["QDA", "KFold"] <- mean(pred_rate) 
+CV.results["QDA", "KFold"] # 94.77% for K-fold 10 validation of QDA
 ```
 
 
@@ -303,7 +314,8 @@ mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is quite lower than original 
 LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, LDA.pred.PC$class)
-CV.results.PC[2,1] <- mean(S.Test.PC$class == LDA.pred.PC$class) # 82.82%. It is quite lower than original 94.35%, correct classification rate.
+CV.results["LDA.PC", "ValSet"] <- mean(S.Test.PC$class == LDA.pred.PC$class) 
+CV.results["LDA.PC", "ValSet"] # 82.82%. It is quite lower than original 94.35%, correct classification rate.
 ```
 
 3-4. LDA with PC Cross-validation (CV: k-fold 10)
@@ -316,7 +328,8 @@ for(i in 1:10){
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-CV.results.PC[2,2] <- mean(pred_rate) # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
+CV.results["LDA.PC", "KFold"] <- mean(pred_rate)
+CV.results["LDA.PC", "KFold"] # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
 ```
 
 3-5. QDA with PC
@@ -337,7 +350,8 @@ mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the ori
 QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, QDA.pred.PC$class)
-CV.results.PCA[3,1] <- mean(S.Test.PC$class == QDA.pred.PC$class) # 94.47%, it is almost the same as the original 94.91%.
+CV.results["QDA.PC", "ValSet"] <- mean(S.Test.PC$class == QDA.pred.PC$class) 
+CV.results["QDA.PC", "ValSet"] # 94.47%, it is almost the same as the original 94.91%.
 ```
 
 3-8. QDA with PC Cross-validation (CV: k-fold 10)
@@ -350,9 +364,9 @@ for(i in 1:10){
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-CV.results.PCA[3,2] <- mean(pred_rate) # 94.55%. It is almost the same as the original 94.77%
+CV.results["QDA.PC", "KFold"] <- mean(pred_rate) 
+CV.results["QDA.PC", "KFold"] # 94.55%. It is almost the same as the original 94.77%
 ```
-
 
 
 ## Logistic regression
@@ -434,10 +448,10 @@ cv.logistic <- function(train, test, predictors){
 
 ```{r}
 # cross-validation
-predictors <- c("u", "g", "r", "i", "z", "redshift")
+predictors <- c("u", "g", "r", "i", "z", "trans.redshift")
 
 VS <- cv.logistic(S.Train, S.Test, predictors)
-CV.results[4,1] <- VS$class.rate
+CV.results["Logistic", "ValSet"] <- VS$class.rate
 VS$confusion.matrix
 ```
 
@@ -452,7 +466,7 @@ for(i in 1:10){
   class.rates <- c(class.rates, KF$class.rate)
 }
 
-CV.results[4,2] <- mean(class.rates)
+CV.results["Logistic", "KFold"] <- mean(class.rates)
 ```
 
 4. Logistic regression with principle components
@@ -461,7 +475,7 @@ CV.results[4,2] <- mean(class.rates)
 predictors <- c("PC1", "PC2", "PC3")
 
 VS <- cv.logistic(S.Train.PC, S.Test.PC, predictors)
-CV.results.PC[4,1] <- VS$class.rate
+CV.results["Logistic.PC", "ValSet"] <- VS$class.rate
 VS$confusion.matrix
 ```
 
@@ -477,7 +491,7 @@ for(i in 1:10){
   class.rates <- c(class.rates, KF$class.rate)
 }
 
-CV.results.PC[4,2] <- mean(class.rates)
+CV.results["Logistic.PC", "KFold"] <- mean(class.rates)
 ```
 
 
