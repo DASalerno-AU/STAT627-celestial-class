@@ -153,6 +153,8 @@ head(pc_df)
 n.PC <- length(pc_df$class)
 S.Train.PC <- pc_df[Z.S,]
 S.Test.PC <- pc_df[-Z.S,]
+X.S.Train.PC <- S.Train.PC[, c("PC1", "PC2", "PC3")]
+X.S.Test.PC <- S.Test.PC[, c("PC1", "PC2", "PC3")]
 ```
 
 The first three principal components explain 98% of the variance.
@@ -199,35 +201,31 @@ CV.results["KNN", "ValSet"] <- max(class.rate)
 ```
 
 ```{r}
-# K20 <- as.vector(1:20)
-# plot(K,class.rate)
 plot(class.rate, type = "l", xlab = "K")
 ```
 
 ### KNN, with PCA
 
 ```{r}
-for (K in 1:20) {
-  knn.S.pca = knn(X.S.Train.PC, X.S.Test.PC, Y.S.Train.PC, K) 
-  class.rate[K] = mean(Y.S.Test.PC == knn.S.pca)
+class.rate <- NULL
+
+set.seed(1)
+for (K in 1:12) {
+  knn.S.pca = knn(X.S.Train.PC, X.S.Test.PC, Y.S.Train, K) 
+  class.rate[K] = mean(Y.S.Test == knn.S.pca)
 }
 
 class.rate
 ```
 
 ```{r}
-CV.results["KNN.PC", "ValSet"] <- which.max(class.rate)
-max(class.rate)
+which.max(class.rate)
+CV.results["KNN.PC", "ValSet"] <- max(class.rate)
 ```
 
 ```{r}
-plot(class.rate)
+plot(class.rate, type = "l", xlab = "K")
 ```
-
-The benefit of KNN is that this is a parameter less classification method. 
-It classifies data without assuming any distribution shapes about the data. 
-Given the large n of 100,000 and the small p of 6, the KNN model will have the benefit of being able to closely follow a non-linear boundary and not follow noise too closely. 
-Note however that as KNN reduces bias, it tends to incur variance. 
 
 ## LDA/QDA
 1. Data Analysis 1 (LDA)
