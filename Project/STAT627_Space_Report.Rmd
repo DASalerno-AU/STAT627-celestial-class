@@ -16,11 +16,14 @@ For our project, our central question was "Which statistical model would most op
 
 To answer this question we built the following models:
 
-KNN
-LDA/QDA
-Logistic Regression
-PCA
-Trees/Random Forests
+- KNN
+  - KNN with PCA
+- LDA/QDA
+  - LDA/QDA with PCA
+- Logistic Regression
+  - Logistic Regression with PCA
+- Trees/Random Forests
+  - Trees/Random Forests with PCA
 
 ## Data source
 
@@ -129,6 +132,14 @@ set.seed(1)
 fold <- sample(rep(1:10, 10000), n.S)
 ```
 
+```{r}
+# Initialize matrix for cross validation results
+CV.results <- matrix(nrow = 6, ncol = 2)
+rownames(CV.results) <- c("KNN", "LDA", "QDA", "Logistic", "Tree", "RF")
+colnames(CV.results) <- c("ValSet", "KFold")
+CV.results.PC <- CV.results
+```
+
 # Calculate principal components
 
 We will try each of our models using the original data against models using the first three principal components. In addition to addressing multicollinearity issues, we hope that the principal components will allow us to cut the size of the data in half.
@@ -178,7 +189,7 @@ class.rate
 
 ```{r}
 which.max(class.rate)
-max(class.rate)
+CV.results[1,1] <- max(class.rate)
 ```
 
 ```{r}
@@ -215,7 +226,7 @@ mean(Space_DF$class == LDA.fit$class) # 94.54%: Correct classification rate = pr
 LDA.training <- lda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 LDA.pred <- predict(LDA.training, newdata = S.Test) # Prediction by using the testing set
 table(S.Test$class, LDA.pred$class) # The main diagonal shows correctly classified counts.
-mean(S.Test$class == LDA.pred$class) # 94.35%: Correct classification rate = proportion of correctly classified counts.
+CV.results[2,1] <- mean(S.Test$class == LDA.pred$class) # 94.35%: Correct classification rate = proportion of correctly classified counts.
 ```
 
 1-4. LDA Cross-validation (CV: k-fold 10)
@@ -228,7 +239,7 @@ for(i in 1:10){
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-mean(pred_rate) # 94.53% for K-fold 10 validation of LDA
+CV.results[2,2] <- mean(pred_rate) # 94.53% for K-fold 10 validation of LDA
 ```
 
 
@@ -255,7 +266,7 @@ table(is.na(QDA.fit$class)) # There are 7 NAs in the result.
 QDA.training <- qda(class ~ u + g + r + i + z + trans.redshift, data = S.Train) # Only used the training set
 QDA.pred <- predict(QDA.training, newdata = S.Test) # Prediction by using the testing set
 table(S.Test$class, QDA.pred$class) # The main diagonal shows correctly classified counts.
-mean(S.Test$class == QDA.pred$class) # 94.91%: Correct classification rate = proportion of correctly classified counts.
+CV.results[3,1] <- mean(S.Test$class == QDA.pred$class) # 94.91%: Correct classification rate = proportion of correctly classified counts.
 ```
 
 2-4. QDA Cross-validation (CV: k-fold 10)
@@ -268,7 +279,7 @@ for(i in 1:10){
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-mean(pred_rate) # 94.77% for K-fold 10 validation of QDA
+CV.results[3,2] <- mean(pred_rate) # 94.77% for K-fold 10 validation of QDA
 ```
 
 
@@ -292,7 +303,7 @@ mean(pc_df$class == LDA.fit.PC$class) # 82.71%. It is quite lower than original 
 LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, LDA.pred.PC$class)
-mean(S.Test.PC$class == LDA.pred.PC$class) # 82.82%. It is quite lower than original 94.35%, correct classification rate.
+CV.results.PC[2,1] <- mean(S.Test.PC$class == LDA.pred.PC$class) # 82.82%. It is quite lower than original 94.35%, correct classification rate.
 ```
 
 3-4. LDA with PC Cross-validation (CV: k-fold 10)
@@ -305,7 +316,7 @@ for(i in 1:10){
   lda_kf_pred <- predict(lda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
-mean(pred_rate) # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
+CV.results.PC[2,2] <- mean(pred_rate) # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
 ```
 
 3-5. QDA with PC
@@ -326,7 +337,7 @@ mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the ori
 QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, QDA.pred.PC$class)
-mean(S.Test.PC$class == QDA.pred.PC$class) # 94.47%, it is almost the same as the original 94.91%.
+CV.results.PCA[3,1] <- mean(S.Test.PC$class == QDA.pred.PC$class) # 94.47%, it is almost the same as the original 94.91%.
 ```
 
 3-8. QDA with PC Cross-validation (CV: k-fold 10)
@@ -339,7 +350,7 @@ for(i in 1:10){
   qda_kf_pred <- predict(qda_kf, test_kf)
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
-mean(pred_rate) # 94.55%. It is almost the same as the original 94.77%
+CV.results.PCA[3,2] <- mean(pred_rate) # 94.55%. It is almost the same as the original 94.77%
 ```
 
 
@@ -426,7 +437,7 @@ cv.logistic <- function(train, test, predictors){
 predictors <- c("u", "g", "r", "i", "z", "redshift")
 
 VS <- cv.logistic(S.Train, S.Test, predictors)
-VS$class.rate
+CV.results[4,1] <- VS$class.rate
 VS$confusion.matrix
 ```
 
@@ -441,7 +452,7 @@ for(i in 1:10){
   class.rates <- c(class.rates, KF$class.rate)
 }
 
-mean(class.rates)
+CV.results[4,2] <- mean(class.rates)
 ```
 
 4. Logistic regression with principle components
@@ -450,7 +461,7 @@ mean(class.rates)
 predictors <- c("PC1", "PC2", "PC3")
 
 VS <- cv.logistic(S.Train.PC, S.Test.PC, predictors)
-VS$class.rate
+CV.results.PC[4,1] <- VS$class.rate
 VS$confusion.matrix
 ```
 
@@ -466,7 +477,7 @@ for(i in 1:10){
   class.rates <- c(class.rates, KF$class.rate)
 }
 
-mean(class.rates)
+CV.results.PC[4,2] <- mean(class.rates)
 ```
 
 
