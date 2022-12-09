@@ -216,7 +216,7 @@ class.rate
 ```
 
 ```{r}
-which.max(class.rate)
+CV.results["KNN.PC", "ValSet"] <- which.max(class.rate)
 max(class.rate)
 ```
 
@@ -660,11 +660,36 @@ Furthermore, random forests are able to achieve a higher prediction accuracy by 
 
 # Results
 
+## Model comparison
+
+```{r}
+CV.err <- (1 - CV.results)[order(CV.results$ValSet, decreasing = T),]
+
+barplot(CV.err$ValSet, 
+        main = "Validation Set Error Rates by Model",
+        names.arg = rownames(CV.err)[1:12], 
+        ylim = c(0, 0.09), 
+        las = 2,
+        col = "dark blue")
+```
+
+```{r}
+CV.err <- (1 - CV.results)[order(CV.results$KFold, decreasing = T),]
+
+barplot(CV.err$KFold, 
+        main = "K-Fold Error Rates by Model",
+        names.arg = rownames(CV.err)[1:12], 
+        ylim = c(0, 0.09), 
+        las = 2,
+        col = "dark blue")
+```
+
+## Discussion and conclusion
+
 The model with the best prediction rate was the random forest model at 97.76% accuracy.
 
 We believe the random forest was the model that most accurately predicted the testing data as this model is the most flexible and as it is a composite of multiple random tress (it is a composite of multiple models). 
 The trees classify the data more accurately because they only use redshift and one wavelength variable, eliminating the multicollinearity that may be introduced by including the highly correlated wavelength variables.
-
 
 The final questions our group poses to astronomers and to astrostatisticians are as follow:
 
