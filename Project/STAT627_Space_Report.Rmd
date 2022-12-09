@@ -204,6 +204,10 @@ CV.results["KNN", "ValSet"] <- max(class.rate)
 plot(class.rate, type = "l", xlab = "K")
 ```
 
+The benefit of KNN is that this is a parameter less classification method. 
+It classifies data without assuming any distribution shapes about the data. 
+Given the large n of 100,000 and the small p of 6, the KNN model will have the benefit of being able to closely follow a non-linear boundary and not follow noise too closely. 
+Note however that as KNN reduces bias, it tends to incur variance. 
 
 ## LDA/QDA
 1. Data Analysis 1 (LDA)
