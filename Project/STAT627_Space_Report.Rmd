@@ -605,3 +605,16 @@ CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 # Results
 
 The model with the best prediction rate was the random forest model at 97.76% accuracy.
+
+We believe the random forest was the model that most accurately predicted the testing data as this model is the most flexible and as it is a composite of multiple random tress (it is a composite of multiple models). 
+The trees classify the data more accurately because they only use redshift and one wavelength variable, eliminating the multicollinearity that may be introduced by including the highly correlated wavelength variables.
+
+The final questions our group poses to astronomers and to astrostatisticians are as follow:
+
+1)Is our final model accurate enough for your purpose in classifying stars, quasars, and galaxies?
+2)Is a model that classifies stars, quasars, and galaxies useful or do you also need a model that classifies comets, planets, and blackholes as well as stars, quasars, and galaxies?
+3)What are the negative consequences of misclassification in the various contexts?
+4)How long will our final model be useful? Would this model be useful for one year, five years, or ten years?
+5)How does our final model compare to other models?
+
+The answers would vary on a case-by-case basis, depending on the needs and goals of the organization in question.
