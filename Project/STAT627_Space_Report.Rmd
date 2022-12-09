@@ -204,6 +204,26 @@ CV.results["KNN", "ValSet"] <- max(class.rate)
 plot(class.rate, type = "l", xlab = "K")
 ```
 
+### KNN, with PCA
+
+```{r}
+for (K in 1:20) {
+  knn.S.pca = knn(X.S.Train.PC, X.S.Test.PC, Y.S.Train.PC, K) 
+  class.rate[K] = mean(Y.S.Test.PC == knn.S.pca)
+}
+
+class.rate
+```
+
+```{r}
+which.max(class.rate)
+max(class.rate)
+```
+
+```{r}
+plot(class.rate)
+```
+
 The benefit of KNN is that this is a parameter less classification method. 
 It classifies data without assuming any distribution shapes about the data. 
 Given the large n of 100,000 and the small p of 6, the KNN model will have the benefit of being able to closely follow a non-linear boundary and not follow noise too closely. 
