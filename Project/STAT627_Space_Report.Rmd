@@ -91,6 +91,7 @@ norm_plots(Space_DF$i)
 norm_plots(Space_DF$z)
 norm_plots(Space_DF$redshift)
 ```
+
 All variables look reasonably normal except redshift.
 
 ```{r}
@@ -114,12 +115,9 @@ To test our results, we will use both validation set and 10-fold cross-validatio
 set.seed(1)
 n.S <- nrow(Space_DF) 
 Z.S <- sample(n.S, n.S*0.9) # We’ll split data at random 
-```
 
-```{r}
 S.Train <- Space_DF[Z.S,] # training data
 S.Test <- Space_DF[-Z.S,] # testing data
-
 X.S.Train <- S.Train[, c("u", "r", "g", "i", "z", "trans.redshift")]
 X.S.Test <- S.Test[, c("u", "r", "g", "i", "z", "trans.redshift")]
 Y.S.Train <- Space_DF$class[Z.S]
@@ -165,11 +163,12 @@ norm_plots(pc_df$PC2)
 norm_plots(pc_df$PC3)
 ```
 
-The principal components appear to follow a normal distribution, satisfying the assumption for discriminant analysis.
+The principal components appear to follow normal distributions, satisfying the assumption for discriminant analysis.
 
 # Models
 
 ## KNN
+
 
 ```{r}
 set.seed(1)
@@ -506,7 +505,7 @@ y_hat <- predict(tree, newdata = S.Test, type = 'class')
 plot(tree, type = 'uniform'); text(tree)
 
 # show performance on testing data
-(tree.err <- mean(y_hat != Y.S.Test))
+CV.results["Tree", "ValSet"] <- mean(y_hat == Y.S.Test)
 table(y_hat, Y.S.Test)
 ```
 
@@ -520,7 +519,7 @@ plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
 # show performance of model
 tree.pruned.s <- summary(tree.pruned)
-(tree.pruned.err <- tree.pruned.s[[7]][1] / tree.pruned.s[[7]][2])
+CV.results["Tree", "KFold"] <- 1 - tree.pruned.s[[7]][1] / tree.pruned.s[[7]][2]
 ```
 
 ```{r VS pruned tree pca}
@@ -530,7 +529,7 @@ y_hat <- predict(tree, newdata = S.Test.PC, type = 'class')
 plot(tree, type = 'uniform'); text(tree)
 
 # show performance on testing data
-(tree.err <- mean(y_hat != Y.S.Test))
+CV.results["Tree.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 table(y_hat, Y.S.Test)
 ```
 
@@ -544,7 +543,7 @@ plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
 # show performance of model
 tree.pruned.s <- summary(tree.pruned)
-(tree.pruned.err <- tree.pruned.s[[6]][1] / tree.pruned.s[[6]][2])
+CV.results["Tree.PC", "KFold"] <- 1 - tree.pruned.s[[6]][1] / tree.pruned.s[[6]][2]
 ```
 
 ### Random Forests
@@ -573,7 +572,7 @@ rf.optimal <- randomForest(class ~ u + g + r + i + z + redshift,
                            )
 y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
 table(y_hat, Y.S.Test)
-(rf.optimal.err <- mean(y_hat != Y.S.Test))
+CV.results["RF", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
 ```{r VS random forest PCA}
@@ -600,8 +599,8 @@ rf.optimal <- randomForest(class ~ PC1 + PC2 + PC3,
                            )
 y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
 table(y_hat, Y.S.Test)
-(rf.optimal.err <- mean(y_hat != Y.S.Test))
-
+CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
+```
 
 # Results
 
