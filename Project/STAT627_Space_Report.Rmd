@@ -497,6 +497,112 @@ CV.results["Logistic.PC", "KFold"] <- mean(class.rates)
 
 ## Trees/Random Forests
 
+### Single Tree
+
+```{r VS pruned tree}
+# train model and plot
+tree <- tree(class ~ u + g + r + i + z + redshift, S.Train)
+y_hat <- predict(tree, newdata = S.Test, type = 'class')
+plot(tree, type = 'uniform'); text(tree)
+
+# show performance on testing data
+(tree.err <- mean(y_hat != Y.S.Test))
+table(y_hat, Y.S.Test)
+```
+
+```{r K-fold pruned tree}
+# train model and plot
+tree <- tree(class ~ u + g + r + i + z + redshift, Space_DF)
+tree.cv <- cv.tree(tree, FUN = prune.misclass)
+tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
+tree.pruned <- prune.misclass(tree, best = tree.cv.size)
+plot(tree.pruned, type = 'uniform'); text(tree.pruned)
+
+# show performance of model
+tree.pruned.s <- summary(tree.pruned)
+(tree.pruned.err <- tree.pruned.s[[7]][1] / tree.pruned.s[[7]][2])
+```
+
+```{r VS pruned tree pca}
+# train model and plot
+tree <- tree(class ~ PC1 + PC2 + PC3, S.Train.PC)
+y_hat <- predict(tree, newdata = S.Test.PC, type = 'class')
+plot(tree, type = 'uniform'); text(tree)
+
+# show performance on testing data
+(tree.err <- mean(y_hat != Y.S.Test))
+table(y_hat, Y.S.Test)
+```
+
+```{r K-fold pruned tree pca}
+# train model and plot
+tree <- tree(class ~ PC1 + PC2 + PC3, pc_df)
+tree.cv <- cv.tree(tree, FUN = prune.misclass)
+tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
+tree.pruned <- prune.misclass(tree, best = tree.cv.size)
+plot(tree.pruned, type = 'uniform'); text(tree.pruned)
+
+# show performance of model
+tree.pruned.s <- summary(tree.pruned)
+(tree.pruned.err <- tree.pruned.s[[6]][1] / tree.pruned.s[[6]][2])
+```
+
+### Random Forests
+
+```{r VS random forest}
+# initialize error and tree number variables
+rf.err <- 0
+ntrees <- 0
+for(i in 1:5){
+  rf <- randomForest(class ~ u + g + r + i + z + redshift, 
+                     data = S.Train, mtry = i)
+  rf.ntrees <- which.min(rf$err.rate)
+  rf <- randomForest(class ~ u + g + r + i + z + redshift, 
+                     data = S.Train, mtry = i, ntree = rf.ntrees)
+  y_hat <- predict(rf, newdata = S.Test)
+  rf.err[i] <- mean(y_hat != Y.S.Test)
+  ntrees[i] <- rf.ntrees
+}
+
+plot(rf.err); lines(rf.err)
+
+rf.optimal <- randomForest(class ~ u + g + r + i + z + redshift, 
+                           data = S.Train,
+                           mtry = which.min(rf.err), 
+                           ntrees = ntrees[which.min(rf.err)]
+                           )
+y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
+table(y_hat, Y.S.Test)
+(rf.optimal.err <- mean(y_hat != Y.S.Test))
+```
+
+```{r VS random forest PCA}
+# initialize error and tree number variables
+rf.err <- 0
+ntrees <- 0
+for(i in 1:5){
+  rf <- randomForest(class ~ PC1 + PC2 + PC3, 
+                     data = S.Train.PC, mtry = i)
+  rf.ntrees <- which.min(rf$err.rate)
+  rf <- randomForest(class ~ PC1 + PC2 + PC3, 
+                     data = S.Train.PC, mtry = i, ntree = rf.ntrees)
+  y_hat <- predict(rf, newdata = S.Test)
+  rf.err[i] <- mean(y_hat != Y.S.Test)
+  ntrees[i] <- rf.ntrees
+}
+
+plot(rf.err); lines(rf.err)
+
+rf.optimal <- randomForest(class ~ PC1 + PC2 + PC3, 
+                           data = S.Train.PC,
+                           mtry = which.min(rf.err), 
+                           ntrees = ntrees[which.min(rf.err)]
+                           )
+y_hat <- predict(rf.optimal, newdata = S.Test, type = 'class')
+table(y_hat, Y.S.Test)
+(rf.optimal.err <- mean(y_hat != Y.S.Test))
+
+
 # Results
 
 The model with the best prediction rate was the random forest model at 97.76% accuracy.
