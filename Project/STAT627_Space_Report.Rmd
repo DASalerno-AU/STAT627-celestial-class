@@ -12,7 +12,7 @@ pacman::p_load(tidyverse, readxl, XML, jsonlite, tidymodels, infer, reshape2, pw
 
 # Introduction
 
-For our project, our central question was "Which statistical model would most optimally classify whether a celestial body is a star, quasar, or galaxy."
+For our project, our central question was "Which statistical model would most reliably classify whether a celestial body is a star, quasar, or galaxy?"
 
 To answer this question we built the following models:
 
@@ -602,15 +602,19 @@ Interestingly, K-Fold cross-validation continues to improve prediction accuracy.
 ```{r VS random forest}
 set.seed(1)
 
+# sample 5000 rows of the data for tuning, to reduce computing time
+A <- sample(nrow(S.Train), 5000)
+S.Tuning <- S.Train[A,]
+
 # initialize error and tree number variables
 rf.err <- 0
 ntrees <- 0
 for(i in 1:5){
   rf <- randomForest(class ~ u + g + r + i + z + redshift, 
-                     data = S.Train[1:5000,], mtry = i) # for tuning, we use a the first 5000 observations to reduce computing time
+                     data = S.Tuning, mtry = i)
   rf.ntrees <- which.min(rf$err.rate)
   rf <- randomForest(class ~ u + g + r + i + z + redshift, 
-                     data = S.Train[1:5000,], mtry = i, ntree = rf.ntrees)
+                     data = S.Tuning, mtry = i, ntree = rf.ntrees)
   y_hat <- predict(rf, newdata = S.Test)
   rf.err[i] <- mean(y_hat != Y.S.Test)
   ntrees[i] <- rf.ntrees
@@ -618,6 +622,7 @@ for(i in 1:5){
 
 plot(rf.err); lines(rf.err)
 
+# final model
 rf.optimal <- randomForest(class ~ u + g + r + i + z + redshift, 
                            data = S.Train,
                            mtry = which.min(rf.err), 
@@ -628,20 +633,24 @@ table(y_hat, Y.S.Test)
 CV.results["RF", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
-The random forest method achieves the highest prediction accuracy of all tree-based models at 97.73%. 
+The random forest method achieves the highest prediction accuracy of all tree-based models at 97.74%. 
 
 ```{r VS random forest PCA}
 set.seed(1)
+
+# sample 5000 rows of the data for tuning
+B <- sample(nrow(S.Train), 5000)
+S.Tuning.PC <- S.Train.PC[B,]
 
 # initialize error and tree number variables
 rf.err <- 0
 ntrees <- 0
 for(i in 1:3){
   rf <- randomForest(class ~ PC1 + PC2 + PC3, 
-                     data = S.Train.PC[1:5000,], mtry = i)
+                     data = S.Tuning.PC, mtry = i)
   rf.ntrees <- which.min(rf$err.rate)
   rf <- randomForest(class ~ PC1 + PC2 + PC3, 
-                     data = S.Train.PC[1:5000,], mtry = i, ntree = rf.ntrees)
+                     data = S.Tuning.PC, mtry = i, ntree = rf.ntrees)
   y_hat <- predict(rf, newdata = S.Test.PC)
   rf.err[i] <- mean(y_hat != Y.S.Test)
   ntrees[i] <- rf.ntrees
@@ -659,7 +668,7 @@ table(y_hat, Y.S.Test)
 CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
-Remaining consistent with prior models, principal components in the random forest model decrease prediction accuracy to 96.73%.
+Remaining consistent with prior models, principal components in the random forest model decrease prediction accuracy to 96.84%.
 
 In summary, principal components reduce the prediction accuracy of the tree-based models. One of the reasons is likely that the trees eliminate the multicolinearity issue introduced by the highly correlated wavelength variables by including only one them in conjunction with the redshift variable. Thus, where elimination of multicolinearity is an advantage of principal components, this is redundant when considering decision trees.
 
@@ -684,17 +693,17 @@ The random forest without principal components is the best performing model by a
 
 ## Discussion and conclusion
 
-The model with the best prediction rate was the random forest model at 97.76% accuracy.
+The model with the best prediction rate was the random forest model at 97.74% accuracy.
 
 We believe the random forest was the model that most accurately predicted the testing data as this model is the most flexible and as it is a composite of multiple random tress (it is a composite of multiple models). 
 The trees classify the data more accurately because they only use redshift and one wavelength variable, eliminating the multicollinearity that may be introduced by including the highly correlated wavelength variables.
 
 The final questions our group poses to astronomers and to astrostatisticians are as follow:
 
-1)Is our final model accurate enough for your purpose in classifying stars, quasars, and galaxies?
-2)Is a model that classifies stars, quasars, and galaxies useful or do you also need a model that classifies comets, planets, and blackholes as well as stars, quasars, and galaxies?
-3)What are the negative consequences of misclassification in the various contexts?
-4)How long will our final model be useful? Would this model be useful for one year, five years, or ten years?
-5)How does our final model compare to other models?
+- 1)Is our final model accurate enough for your purpose in classifying stars, quasars, and galaxies?
+- 2)Is a model that classifies stars, quasars, and galaxies useful or do you also need a model that classifies comets, planets, and blackholes as well as stars, quasars, and galaxies?
+- 3)What are the negative consequences of misclassification in the various contexts?
+- 4)How long will our final model be useful? Would this model be useful for one year, five years, or ten years?
+- 5)How does our final model compare to other models?
 
 The answers would vary on a case-by-case basis, depending on the needs and goals of the organization in question.
