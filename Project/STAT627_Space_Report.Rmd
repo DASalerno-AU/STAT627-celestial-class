@@ -227,6 +227,11 @@ CV.results["KNN.PC", "ValSet"] <- max(class.rate)
 plot(class.rate, type = "l", xlab = "K")
 ```
 
+The benefit of KNN is that this is a parameter less classification method. 
+It classifies data without assuming any distribution shapes about the data. 
+Given the large n of 100,000 and the small p of 6, the KNN model will have the benefit of being able to closely follow a non-linear boundary and not follow noise too closely. 
+Note however that as KNN reduces bias, it tends to incur variance. 
+
 ## LDA/QDA
 1. Data Analysis 1 (LDA)
 1-1. Linear Discriminant Analysis (LDA)
@@ -336,7 +341,7 @@ LDA.training.PC <- lda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 LDA.pred.PC <- predict(LDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, LDA.pred.PC$class)
 CV.results["LDA.PC", "ValSet"] <- mean(S.Test.PC$class == LDA.pred.PC$class) 
-CV.results["LDA.PC", "ValSet"] # 82.82%. It is quite lower than original 94.35%, correct classification rate.
+CV.results["LDA.PC", "ValSet"] # 94.21%. It is almost the same as the original 94.35%, correct classification rate.
 ```
 
 3-4. LDA with PC Cross-validation (CV: k-fold 10)
@@ -350,7 +355,7 @@ for(i in 1:10){
   pred_rate[i] <- mean(test_kf$class == lda_kf_pred$class)
 }
 CV.results["LDA.PC", "KFold"] <- mean(pred_rate)
-CV.results["LDA.PC", "KFold"] # 82.71%, It is quite lower than original 94.53% for K-fold 10 validation of LDA
+CV.results["LDA.PC", "KFold"] # 94.77%, It is almost the same as the original 94.45% for K-fold 10 validation of LDA
 ```
 
 3-5. QDA with PC
@@ -363,7 +368,7 @@ QDA.PC
 ```{r}
 QDA.fit.PC <- qda(class ~ PC1 + PC2 + PC3, CV = TRUE, data = pc_df)
 table(pc_df$class, QDA.fit.PC$class)
-mean(pc_df$class == QDA.fit.PC$class) # 94.55%. It is almost the same as the original 94.77%
+mean(pc_df$class == QDA.fit.PC$class) # 95.08%. It is almost the same as the original 94.77%
 ```
 
 3-7. QDA with PC Cross-validation (CV: Cross-validation, training:testing = 9:1)
@@ -372,7 +377,7 @@ QDA.training.PC <- qda(class ~ PC1 + PC2 + PC3, data = S.Train.PC)
 QDA.pred.PC <- predict(QDA.training.PC, newdata = S.Test.PC)
 table(S.Test.PC$class, QDA.pred.PC$class)
 CV.results["QDA.PC", "ValSet"] <- mean(S.Test.PC$class == QDA.pred.PC$class) 
-CV.results["QDA.PC", "ValSet"] # 94.47%, it is almost the same as the original 94.91%.
+CV.results["QDA.PC", "ValSet"] # 95.18%, it is almost the same as the original 94.91%.
 ```
 
 3-8. QDA with PC Cross-validation (CV: k-fold 10)
@@ -386,7 +391,7 @@ for(i in 1:10){
   pred_rate[i] <- mean(test_kf$class == qda_kf_pred$class)
 }
 CV.results["QDA.PC", "KFold"] <- mean(pred_rate) 
-CV.results["QDA.PC", "KFold"] # 94.55%. It is almost the same as the original 94.77%
+CV.results["QDA.PC", "KFold"] # 95.08%. It is almost the same as the original 94.77%
 ```
 
 As for LDA & QDA, the result of QDA by validation set method showed the best prediction rate, 94.91%. 
@@ -551,8 +556,8 @@ The performance is quite good, with a prediction accuracy of 95.67%.
 tree <- tree(class ~ u + g + r + i + z + redshift, Space_DF)
 tree.cv <- cv.tree(tree, FUN = prune.misclass)
 tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
-tree.pruned <- prune.misclass(tree, best = tree.cv.size)
 tree.pruned
+tree.pruned <- prune.misclass(tree, best = tree.cv.size)
 plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
 # show performance of model
@@ -574,7 +579,7 @@ CV.results["Tree.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 table(y_hat, Y.S.Test)
 ```
 
-The prediction accuracy declines sharply when introducing principle components to the single pruned tree, down to 84.93%.
+The prediction accuracy declines sharply when introducing principal components to the single pruned tree, down to 91.68%.
 
 ```{r K-fold pruned tree pca}
 # train model and plot
@@ -590,7 +595,7 @@ tree.pruned.s <- summary(tree.pruned)
 CV.results["Tree.PC", "KFold"] <- 1 - tree.pruned.s[[6]][1] / tree.pruned.s[[6]][2]
 ```
 
-Interestingly, while K-Fold cross-validation previously improved prediction accuracy, the opposite is true concerning principle components. Prediction accuracy declines to approximately 84.82%.
+Interestingly, K-Fold cross-validation continues to improve prediction accuracy. Prediction accuracy declines to approximately 92.08%.
 
 ### Random Forests
 
@@ -671,16 +676,7 @@ barplot(CV.err$ValSet,
         col = "dark blue")
 ```
 
-```{r}
-CV.err <- (1 - CV.results)[order(CV.results$KFold, decreasing = T),]
-
-barplot(CV.err$KFold, 
-        main = "K-Fold Error Rates by Model",
-        names.arg = rownames(CV.err)[1:12], 
-        ylim = c(0, 0.09), 
-        las = 2,
-        col = "dark blue")
-```
+The random forest without principal components is the best performing model by a full percentage point. KNN with principal components is the next best model. The advantage of using this model it only requires half of the data size.
 
 ## Discussion and conclusion
 
