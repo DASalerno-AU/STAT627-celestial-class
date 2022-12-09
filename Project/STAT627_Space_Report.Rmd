@@ -659,7 +659,7 @@ table(y_hat, Y.S.Test)
 CV.results["RF.PC", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
-Remaining consistent with prior models, principal components in the random forest model decrease prediction accuracy to 95.68%.
+Remaining consistent with prior models, principal components in the random forest model decrease prediction accuracy to 96.73%.
 
 In summary, principal components reduce the prediction accuracy of the tree-based models. One of the reasons is likely that the trees eliminate the multicolinearity issue introduced by the highly correlated wavelength variables by including only one them in conjunction with the redshift variable. Thus, where elimination of multicolinearity is an advantage of principal components, this is redundant when considering decision trees.
 
