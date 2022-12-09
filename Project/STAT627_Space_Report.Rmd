@@ -600,15 +600,17 @@ Interestingly, K-Fold cross-validation continues to improve prediction accuracy.
 ### Random Forests
 
 ```{r VS random forest}
+set.seed(1)
+
 # initialize error and tree number variables
 rf.err <- 0
 ntrees <- 0
 for(i in 1:5){
   rf <- randomForest(class ~ u + g + r + i + z + redshift, 
-                     data = S.Train, mtry = i)
+                     data = S.Train[1:5000,], mtry = i) # for tuning, we use a the first 5000 observations to reduce computing time
   rf.ntrees <- which.min(rf$err.rate)
   rf <- randomForest(class ~ u + g + r + i + z + redshift, 
-                     data = S.Train, mtry = i, ntree = rf.ntrees)
+                     data = S.Train[1:5000,], mtry = i, ntree = rf.ntrees)
   y_hat <- predict(rf, newdata = S.Test)
   rf.err[i] <- mean(y_hat != Y.S.Test)
   ntrees[i] <- rf.ntrees
@@ -626,19 +628,21 @@ table(y_hat, Y.S.Test)
 CV.results["RF", "ValSet"] <- mean(y_hat == Y.S.Test)
 ```
 
-The random forest method achieves the highest prediction accuracy of all tree-based models at 97.77%. 
+The random forest method achieves the highest prediction accuracy of all tree-based models at 97.73%. 
 
 ```{r VS random forest PCA}
+set.seed(1)
+
 # initialize error and tree number variables
 rf.err <- 0
 ntrees <- 0
-for(i in 1:5){
+for(i in 1:3){
   rf <- randomForest(class ~ PC1 + PC2 + PC3, 
-                     data = S.Train.PC, mtry = i)
+                     data = S.Train.PC[1:5000,], mtry = i)
   rf.ntrees <- which.min(rf$err.rate)
   rf <- randomForest(class ~ PC1 + PC2 + PC3, 
-                     data = S.Train.PC, mtry = i, ntree = rf.ntrees)
-  y_hat <- predict(rf, newdata = S.Test)
+                     data = S.Train.PC[1:5000,], mtry = i, ntree = rf.ntrees)
+  y_hat <- predict(rf, newdata = S.Test.PC)
   rf.err[i] <- mean(y_hat != Y.S.Test)
   ntrees[i] <- rf.ntrees
 }
