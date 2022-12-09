@@ -379,20 +379,22 @@ We may conclude that each class has its own covariance matrix, not the identical
 
 ## Logistic regression
 
-1. Define individual logistic models
-```{r}
+Since there are three classes, we will create a separate logistic model for each. Then our prediction will be the class that has the highest probability.
+
+### 1. Define individual logistic models
+```{r logistic models, warning = F}
 # Calculate individual logistic models for each celestial object
-galaxy.mod <- glm(galaxy ~ u + g + r + i + z + redshift, data = Space_DF, family = binomial)
-star.mod <- glm(star ~ u + g + r + i + z + redshift, data = Space_DF, family = binomial)
-quasar.mod <- glm(quasar ~ u + g + r + i + z + redshift, data = Space_DF, family = binomial)
+galaxy.mod <- glm(galaxy ~ u + g + r + i + z + trans.redshift, data = Space_DF, family = binomial)
+star.mod <- glm(star ~ u + g + r + i + z + trans.redshift, data = Space_DF, family = binomial)
+quasar.mod <- glm(quasar ~ u + g + r + i + z + trans.redshift, data = Space_DF, family = binomial)
 
 summary(galaxy.mod)
 summary(star.mod)
 summary(quasar.mod)
 ```
 
-2. Select best subset
-```{r}
+### 2. Select best subset
+```{r best subset}
 # criteria
 library(leaps)
 criteria <- NULL
@@ -411,7 +413,7 @@ criteria$best <- apply(criteria, 1, which.min)
 criteria
 ```
 
-```{r}
+```{r stepwise selection}
 # stepwise
 full <- galaxy.mod
 null <- glm(galaxy ~ 1, data = Space_DF, family = binomial)
@@ -420,8 +422,8 @@ stats::step(full, scope = list(lower = null, upper = full), direction = "backwar
 ```
 All methods indicate that the best subset includes all predictors
 
-3. Cross-validation
-```{r}
+### 3. Cross-validation
+```{r function}
 cv.logistic <- function(train, test, predictors){
   # This function trains a logistic model for each type of celestial object, then
   # predicts the type of celestial object based on which one is most probable
@@ -454,7 +456,7 @@ cv.logistic <- function(train, test, predictors){
 }
 ```
 
-```{r}
+```{r logistic VS, warning = F}
 # cross-validation
 predictors <- c("u", "g", "r", "i", "z", "trans.redshift")
 
@@ -463,22 +465,22 @@ CV.results["Logistic", "ValSet"] <- VS$class.rate
 VS$confusion.matrix
 ```
 
-```{r}
+```{r logistic KFold, warning = F}
 # 10-fold
 class.rates <- NULL
 
 for(i in 1:10){
   train <- Space_DF[fold != i,]
   test <- Space_DF[fold == i,]
-  KF <- suppressWarnings(cv.logistic(train, test, predictors))
+  KF <- cv.logistic(train, test, predictors)
   class.rates <- c(class.rates, KF$class.rate)
 }
 
 CV.results["Logistic", "KFold"] <- mean(class.rates)
 ```
 
-4. Logistic regression with principle components
-```{r}
+### 4. Logistic regression with principle components
+```{r logistic PC VS, warning = F}
 # cross-validation
 predictors <- c("PC1", "PC2", "PC3")
 
@@ -487,7 +489,7 @@ CV.results["Logistic.PC", "ValSet"] <- VS$class.rate
 VS$confusion.matrix
 ```
 
-```{r}
+```{r logistic PC KFold, warning = F}
 # 10-fold
 
 class.rates <- NULL
@@ -495,12 +497,15 @@ class.rates <- NULL
 for(i in 1:10){
   train <- pc_df[fold != i,]
   test <- pc_df[fold == i,]
-  KF <- suppressWarnings(cv.logistic(train, test, predictors))
+  KF <- cv.logistic(train, test, predictors)
   class.rates <- c(class.rates, KF$class.rate)
 }
 
 CV.results["Logistic.PC", "KFold"] <- mean(class.rates)
 ```
+
+### Understanding the results
+Logistic regression has a classification rate of about 95.6% - 95.7%, slightly less than KNN. Logistic regression with principal components was just as accurate as regular logistic regression, so for this model using principal components to reduce the data set size is advantageous.
 
 
 ## Trees/Random Forests
