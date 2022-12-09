@@ -556,8 +556,8 @@ The performance is quite good, with a prediction accuracy of 95.67%.
 tree <- tree(class ~ u + g + r + i + z + redshift, Space_DF)
 tree.cv <- cv.tree(tree, FUN = prune.misclass)
 tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
-tree.pruned
 tree.pruned <- prune.misclass(tree, best = tree.cv.size)
+tree.pruned
 plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
 # show performance of model
