@@ -371,6 +371,11 @@ CV.results["QDA.PC", "KFold"] <- mean(pred_rate)
 CV.results["QDA.PC", "KFold"] # 94.55%. It is almost the same as the original 94.77%
 ```
 
+As for LDA & QDA, the result of QDA by validation set method showed the best prediction rate, 94.91%. 
+For the assumption of Normal distribution for LDA & QDA, we used the signed root squared ‘trans.redshift’ variable instead of the original ‘redshift’ variable. 
+Specifically, after making the basic models and PCA (PC1,2,3) models for LDA & QDA, we implemented three cross-validation methods (LOOCV, validation set, K-fold). Among the prediction rates of the validation results, the performance of QDA was overall better than LDA’s. 
+We may conclude that each class has its own covariance matrix, not the identical one, because LDA assumes the covariance matrix is identical.
+
 
 ## Logistic regression
 
@@ -635,7 +640,6 @@ The model with the best prediction rate was the random forest model at 97.76% ac
 We believe the random forest was the model that most accurately predicted the testing data as this model is the most flexible and as it is a composite of multiple random tress (it is a composite of multiple models). 
 The trees classify the data more accurately because they only use redshift and one wavelength variable, eliminating the multicollinearity that may be introduced by including the highly correlated wavelength variables.
 
-As for LDA & QDA, the result of QDA by validation set method showed the best prediction rate, 94.91%. For the assumption of Normal distribution for LDA & QDA, we used the signed root squared ‘trans.redshift’ variable instead of the original ‘redshift’ variable. Specifically, after making the basic models and PCA (PC1,2,3) models for LDA & QDA, we implemented three cross-validation methods (LOOCV, validation set, K-fold). Among the prediction rates of the validation results, the performance of QDA was overall better than LDA’s. We may conclude that each class has its own covariance matrix, not the identical one, because LDA assumes the covariance matrix is identical.
 
 The final questions our group poses to astronomers and to astrostatisticians are as follow:
 
