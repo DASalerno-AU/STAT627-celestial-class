@@ -502,6 +502,7 @@ CV.results["Logistic.PC", "KFold"] <- mean(class.rates)
 # train model and plot
 tree <- tree(class ~ u + g + r + i + z + redshift, S.Train)
 y_hat <- predict(tree, newdata = S.Test, type = 'class')
+tree
 plot(tree, type = 'uniform'); text(tree)
 
 # show performance on testing data
@@ -514,6 +515,7 @@ table(y_hat, Y.S.Test)
 tree <- tree(class ~ u + g + r + i + z + redshift, Space_DF)
 tree.cv <- cv.tree(tree, FUN = prune.misclass)
 tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
+tree.pruned
 tree.pruned <- prune.misclass(tree, best = tree.cv.size)
 plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
@@ -526,6 +528,7 @@ CV.results["Tree", "KFold"] <- 1 - tree.pruned.s[[7]][1] / tree.pruned.s[[7]][2]
 # train model and plot
 tree <- tree(class ~ PC1 + PC2 + PC3, S.Train.PC)
 y_hat <- predict(tree, newdata = S.Test.PC, type = 'class')
+tree
 plot(tree, type = 'uniform'); text(tree)
 
 # show performance on testing data
@@ -539,6 +542,7 @@ tree <- tree(class ~ PC1 + PC2 + PC3, pc_df)
 tree.cv <- cv.tree(tree, FUN = prune.misclass)
 tree.cv.size <- tree.cv$size[which.min(tree.cv$dev)]
 tree.pruned <- prune.misclass(tree, best = tree.cv.size)
+tree.pruned
 plot(tree.pruned, type = 'uniform'); text(tree.pruned)
 
 # show performance of model
